@@ -1396,7 +1396,7 @@ msgid "Buttons Have Icons"
 msgstr ""
 
 #: files/usr/lib/cinnamon-settings/cinnamon-settings.py:759
-msgid "Always Use Location Entry In Nemo"
+msgid "Always Use Location Entry In Nautilus"
 msgstr ""
 
 #: files/usr/lib/cinnamon-settings/cinnamon-settings.py:761
@@ -1705,7 +1705,7 @@ msgid "Desktop"
 msgstr ""
 
 #: files/usr/lib/cinnamon-settings/cinnamon-settings.py:2061
-msgid "Have file manager (Nemo) handle the desktop"
+msgid "Have file manager (Nautilus) handle the desktop"
 msgstr ""
 
 #: files/usr/lib/cinnamon-settings/cinnamon-settings.py:2064

@@ -166,11 +166,11 @@ PlacesManager.prototype = {
                                      icon_size: size });
             },
             function (params) {
-                // BUG: nemo-connect-server doesn't have a desktop file, so we can't
+                // BUG: nautilus-connect-server doesn't have a desktop file, so we can't
                 // launch it with the workspace from params. It's probably pretty rare
                 // and odd to drag this place onto a workspace in any case
 
-                Util.spawn(['nemo-connect-server']);
+                Util.spawn(['nautilus-connect-server']);
             });
 
         this._defaultPlaces.push(this._home);

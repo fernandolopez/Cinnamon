@@ -1,0 +1,6 @@
+La traducción oficial de Cinnamon se realiza en:
+https://translations.launchpad.net/linuxmint/isadora/+pots/cinnamon
+
+Desde ese sitio se descargó el archivo .po para llevar adelante la traducción para Lihuen.
+
+La traducción para Lihuen es ligeramente incompatible con la oficial, en Lihuen por el momento usamos Nautilus en lugar de Nemo, lo que hace que algunos mensajes sean distintos.
