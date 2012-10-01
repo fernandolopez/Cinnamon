@@ -1,3 +1,10 @@
+cinnamon (1.6.1lihuen1) UNRELEASED; urgency=low
+
+  * Versión adaptada para Lihuen.
+  * Nemo cambiado por Nautilus.
+
+ --  Soporte Lihuen <soportelihuen@linti.unlp.edu.ar>  Mon, 01 Oct 2012 19:05:57 -0300
+
 cinnamon (1.6.1) maya; urgency=low
 
   * 1.6.1
