@@ -103,6 +103,7 @@ StScrollBar StButton#vhandle:hover {
 	color: #ffffff;
 	font-size: 9.5pt;
 	min-width: 100px;
+	background-bumpmap: url("/usr/share/cinnamon/bumpmaps/frost.png");
 }
 .popup-submenu-menu-item:open {
 	background-color: #4c4c4c;
@@ -417,13 +418,6 @@ StScrollBar StButton#vhandle:hover {
 	width: 400px;
 }
 
-.icon-grid {
-	spacing: 36px;
-	-cinnamon-grid-item-size: 118px;
-}
-.icon-grid .overview-icon {
-	icon-size: 96px;
-}
 .overview-icon {
 	border-radius: 4px;
 	padding: 3px;
@@ -439,30 +433,21 @@ StScrollBar StButton#vhandle:hover {
 	background-gradient-end: #AAA;
 	background-gradient-direction: vertical
 }
-/* ===================================================================
- * ViewSelector 
- * ===================================================================*/
-#viewSelector {
-	spacing: 1em;
-	font-size: 12pt;
+
+.workspace-overview-background-shade {
+	background-color: rgba(0,0,0,0.4);
 }
-#viewSelectorTabBar {
-	padding: 1em;
+
+.expo-workspace-thumbnail-frame {
+	border: 1px, rgba(64,64,64,0.9);
+	background-color: rgba(64,64,64,0.9);
 }
-.view-tab-title {
-	color: #888a85;
-	font-weight: bold;
-	padding: 0px 0.75em;
-	height: 1.5em;
+
+.expo-workspace-thumbnail-frame#active {
+	border: 2px, rgba(32,32,32,0.9);
+	background-color: rgba(32,32,32,0.9);
 }
-.view-tab-title:hover {
-	color: #bbb;
-}
-.view-tab-title:selected {
-	color: #000000;
-	background-color: #c2c7cd;
-	border-radius: 0.25em;
-}
+
 /* ===================================================================
  * Looking Glass 
  * ===================================================================*/
@@ -879,7 +864,7 @@ StScrollBar StButton#vhandle:hover {
 	color: white;
 }
 .switcher-preview-backdrop {
-   background-color: rgba(0,0,0,0.7);
+   background-color: rgba(25,25,25,0.95);
 }
 
 /* ===================================================================
@@ -1624,6 +1609,38 @@ StScrollBar StButton#vhandle:hover {
 }
 
 /* ===================================================================
+ * Desklets (desklet.js) 
+ * ===================================================================*/
+.desklet-box {
+    border: 2px solid #a5a5a5;
+    background-color: rgba(80, 80, 80, 0.8);
+    color: #fff;
+    border-radius-bottomleft: 12px;
+    border-radius-bottomright: 12px;
+}
+
+.desklet-box:no-header{
+    border-radius-topleft: 12px;
+    border-radius-topright: 12px;
+}
+
+.desklet-header { 
+    border-radius-topleft: 12px;
+    border-radius-topright: 12px;
+    font-size: 10.5pt;
+    border: 2px solid #a5a5a5;
+    border-bottom: 0px;
+    background-color: rgba(80, 80, 80, 0.8);
+    color: #fff;
+}
+
+/* ===================================================================
+ * Clock Desklet (desklet.js) 
+ * ===================================================================*/
+.clock-desklet-label {
+}
+
+/* ===================================================================
  * Workspace OSD
  * ===================================================================*/
 
@@ -1637,10 +1654,10 @@ StScrollBar StButton#vhandle:hover {
 .expo-workspaces-name-entry {
 	padding: 5px;
 	border-radius: 4px;
-	color: rgb(128, 128, 128);
+	color: rgb(200, 200, 200);
 	border: 2px solid rgb(136,138,133);
-	background-gradient-start: rgb(200,200,200);
-	background-gradient-end: white;
+	background-gradient-start: rgb(128,128,128);
+	background-gradient-end: rgb(85,85,85);
 	background-gradient-direction: vertical;
 	selected-color: black;
 	caret-color: rgb(128, 128, 128);
@@ -1652,14 +1669,16 @@ StScrollBar StButton#vhandle:hover {
 }
 
 .expo-workspaces-name-entry#selected {
-	background-gradient-start: rgb(128,128,128);
-	background-gradient-end: black;
-	color: rgb(200, 200, 200);
+	background-gradient-start: rgb(200,200,200);
+	background-gradient-end: white;
+	font-weight: bold;
+	color: rgb(0, 0, 0);
 }
 
 .expo-workspaces-name-entry:focus {
-	color: rgb(64, 64, 64);
+	color: rgb(0, 0, 0);
 	font-weight: bold;
+	font-style: italic;
 	transition-duration: 300;
 }
 
@@ -1733,4 +1752,8 @@ StScrollBar StButton#vhandle:hover {
    padding-top: 4px;
    font-size: 0.9em;
    box-shadow: none;
+}
+
+.flashspot {
+   background-color: white;
 }

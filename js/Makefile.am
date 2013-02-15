@@ -7,11 +7,14 @@ nobase_dist_js_DATA = \
 	misc/fileUtils.js	\
 	misc/format.js		\
 	misc/gnomeSession.js	\
+	misc/gridNavigator.js	\
 	misc/history.js		\
 	misc/modemManager.js	\
 	misc/params.js		\
+	misc/pointerTracker.js	\
 	misc/screenSaver.js     \
 	misc/util.js		\
+	misc/windowUtils.js		\
 	perf/core.js		\
 	ui/altTab.js		\
 	ui/applet.js		\
@@ -23,16 +26,18 @@ nobase_dist_js_DATA = \
 	ui/calendar.js		\
 	ui/checkBox.js		\
 	ui/radioButton.js	\
+	ui/desklet.js		\
+	ui/deskletManager.js	\
 	ui/dnd.js		\
 	ui/edgeFlip.js  	\
 	ui/endSessionDialog.js	\
 	ui/environment.js	\
 	ui/expo.js		\
 	ui/expoThumbnail.js	\
-	ui/expoView.js		\
+	ui/extension.js	\
 	ui/extensionSystem.js	\
 	ui/flashspot.js		\
-	ui/iconGrid.js		\
+	ui/hotCorner.js		\
 	ui/keyboard.js		\
 	ui/layout.js		\
 	ui/lightbox.js		\
@@ -61,10 +66,8 @@ nobase_dist_js_DATA = \
 	ui/themeManager.js	\
 	ui/tooltips.js	\
 	ui/tweener.js		\
-	ui/viewSelector.js	\
 	ui/windowAttentionHandler.js	\
 	ui/windowManager.js	\
 	ui/workspace.js		\
 	ui/workspacesView.js	\
 	ui/xdndHandler.js
-	

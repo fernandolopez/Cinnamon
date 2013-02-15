@@ -16,6 +16,7 @@ EdgeFlipper.prototype = {
         this.func = func;
 
         this.enabled = true;
+        this.delay = 1000;
         this.entered = false;
         this.activated = false;
 
@@ -26,36 +27,36 @@ EdgeFlipper.prototype = {
         let mask;
         [this.xMouse, this.yMouse, mask] = global.get_pointer();
         if (this.side == St.Side.RIGHT){
-            if (this.xMouse + 5 > global.screen_width){
+            if (this.xMouse + 2 > global.screen_width){
                 this._onMouseEnter();
             } else {
                 this._onMouseLeave();
             }
         } else if (this.side == St.Side.LEFT){
-            if (this.xMouse < 5 ){
+            if (this.xMouse < 2 ){
                 this._onMouseEnter();
             } else {
                 this._onMouseLeave();
             }
         } else if (this.side == St.Side.BOTTOM){
-            if (this.yMouse + 5 > global.screen_height) {
+            if (this.yMouse + 2 > global.screen_height) {
                 this._onMouseEnter();
             } else {
                 this._onMouseLeave();
             }
         } else if (this.side == St.Side.TOP){
-            if (this.yMouse < 5){
+            if (this.yMouse < 2){
                 this._onMouseEnter();
             } else {
                 this._onMouseLeave();
             }
         }
-        Mainloop.timeout_add(500, Lang.bind(this, this._checkOver));
+        Mainloop.timeout_add(Math.max(this.delay / 2, 200), Lang.bind(this, this._checkOver));
     },
 
     _onMouseEnter: function(){
         this.entered = true;
-        Mainloop.timeout_add(1000, Lang.bind(this, this._check));
+        Mainloop.timeout_add(this.delay, Lang.bind(this, this._check));
     },
 
     _check: function(){

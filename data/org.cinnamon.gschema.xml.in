@@ -22,14 +22,35 @@
     </key>
     
     <key name="enabled-applets" type="as">
-      <default>['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:panel-launchers@cinnamon.org', 'panel1:left:3:window-list@cinnamon.org', 'panel1:right:0:removable-drives@cinnamon.org', 'panel1:right:1:keyboard@cinnamon.org', 'panel1:right:2:bluetooth@cinnamon.org', 'panel1:right:3:network@cinnamon.org', 'panel1:right:4:sound@cinnamon.org', 'panel1:right:5:power@cinnamon.org', 'panel1:right:6:systray@cinnamon.org', 'panel1:right:7:calendar@cinnamon.org', 'panel1:right:8:windows-quick-list@cinnamon.org']</default>
+      <default>['panel1:left:0:menu@cinnamon.org', 'panel1:left:1:show-desktop@cinnamon.org', 'panel1:left:2:panel-launchers@cinnamon.org', 'panel1:left:3:window-list@cinnamon.org', 'panel1:right:0:notifications@cinnamon.org', 'panel1:right:1:settings@cinnamon.org', 'panel1:right:2:removable-drives@cinnamon.org', 'panel1:right:3:keyboard@cinnamon.org', 'panel1:right:4:bluetooth@cinnamon.org', 'panel1:right:5:network@cinnamon.org', 'panel1:right:6:sound@cinnamon.org', 'panel1:right:7:power@cinnamon.org', 'panel1:right:8:systray@cinnamon.org', 'panel1:right:9:calendar@cinnamon.org', 'panel1:right:10:windows-quick-list@cinnamon.org']</default>
       <_summary>Uuids of applets to enable</_summary>
       <_description>
         Cinnamon applets have a uuid property; this key lists applets
         which should be loaded.
       </_description>
     </key>
+
+    <key name="next-applet-id" type="i">
+      <default>0</default>
+      <summary>The next applet id to give the next added applet</summary>
+      <description>Do not change manually.</description>
+    </key>
     
+    <key name="next-desklet-id" type="i">
+      <default>0</default>
+      <_summary>The next desklet id to give the next added desklet</_summary>
+      <_description>Do not change manually.</_description>
+    </key>
+    
+    <key name="enabled-desklets" type="as">
+      <default>[]</default>
+      <_summary>Uuids of desklets to enable</_summary>
+      <_description>
+        Cinnamon desklets have a uuid property; this key lists desklets
+        which should be loaded. uuids should be put in the form uuid:id:x:y, where id is used to distinguish between multiple instances of the same desklet
+      </_description>
+    </key>
+
     <key name="panel-autohide" type="b">
       <default>false</default>
       <_summary>Auto-hide panel</_summary>
@@ -49,7 +70,27 @@
       <summary>Duration of the delay before a shown panel is hidden</summary>
       <description>Duration of the delay (in milliseconds)</description>
     </key>
-    
+
+    <key name="panel2-autohide" type="b">
+      <default>false</default>
+      <_summary>Auto-hide panel</_summary>
+      <_description>
+        Whether the panel autohides or not.
+      </_description>
+    </key>
+
+    <key type="i" name="panel2-show-delay">
+      <default>0</default>
+      <summary>Duration of the delay before a hidden panel is shown</summary>
+      <description>Duration of the delay (in milliseconds)</description>
+    </key>
+
+    <key type="i" name="panel2-hide-delay">
+      <default>0</default>
+      <summary>Duration of the delay before a shown panel is hidden</summary>
+      <description>Duration of the delay (in milliseconds)</description>
+    </key>
+
     <key name="panel-resizable" type="b">
       <default>false</default>
       <_summary>Resizable panel</_summary>
@@ -60,6 +101,7 @@
     
     <key name="panel-top-height" type="i">
       <default>25</default>
+      <range min="20" />
       <_summary>Panel size</_summary>
       <_description>
         User-defined panel-height for top panel
@@ -68,6 +110,7 @@
     
     <key name="panel-bottom-height" type="i">
       <default>25</default>
+      <range min="20" />
       <_summary>Panel size</_summary>
       <_description>
         User-defined panel-height for bottom panel
@@ -237,9 +280,9 @@
     
     <key name="date-format" type="s">
       <default>"YYYY-MM-DD"</default>
-      <_summary>Auto-hide panel</_summary>
+      <_summary>Date format</_summary>
       <_description>
-        Whether the panel autohides or not.
+        Format used for dates.
       </_description>
     </key>
     
@@ -247,7 +290,7 @@
       <default>"Menu"</default>
       <_summary>Text for the menu</_summary>
       <_description>
-	    The text shown in the Menu label.
+            The text shown in the Menu label.
       </_description>
     </key>
     
@@ -255,7 +298,7 @@
       <default>"/usr/share/cinnamon/theme/menu.png"</default>
       <_summary>Icon for the menu</_summary>
       <_description>
-	    The icon shown in the Menu button.
+            The icon shown in the Menu button.
       </_description>
     </key>
     
@@ -296,45 +339,29 @@
       </_description>
     </key>
 
-    <key type="i" name="number-workspaces">
-	<default>2</default>
-	<_summary>Number of workspaces in Cinnamon session</_summary>
-	<_description>
-		Number of Workspaces</_description>
-    </key>
-    
-    <key name="overview-corner-visible" type="b">
+    <key type="b" name="menu-search-filesystem">
       <default>false</default>
-      <_summary>Enable or disable the overview corner icon</_summary>
+      <_summary>Enable or disable filesystem path entry in search box</_summary>
       <_description>
-        Whether the overview icon is visible or not.
+            Toggles whether pressing TAB within the search box autocompletes
+            paths within the filesystem. Matches are also shown in the 
+            application list and can be clicked to open with default handler.
       </_description>
     </key>
-    
-    <key name="overview-corner-hover" type="b">
-      <default>true</default>
-      <_summary>Enable or disable the overview hot corner</_summary>
-      <_description>
-        Whether the overview hot corner is enabled or not.
-      </_description>
+
+    <key type="i" name="number-workspaces">
+        <default>2</default>
+        <_summary>Number of workspaces in Cinnamon session</_summary>
+        <_description>
+                Number of Workspaces</_description>
     </key>
-    
-    <key name="overview-corner-position" type="s">
-      <default>"topLeft"</default>
-      <_summary>Set hot corner position</_summary>
-      <_description>
-        Change the position of the overview hot corner on the screen.
-      </_description>
+
+    <key name="overview-corner" type="as">
+      <default>['expo:true:false', 'scale:false:false', 'scale:false:false', 'scale:false:false']</default>
+      <_summary>Properties of overview corners</_summary>
+      <_description>Properties of overview corners, in the form functionality:hover:icon. The order in which properties are displayed is top left, top right, bottom left, bottom right.</_description>
     </key>
-    
-    <key name="overview-corner-functionality" type="s">
-      <default>"expo"</default>
-      <_summary>Set hot corner functionality</_summary>
-      <_description>
-        Set the function that is executed when hitting the hot corner.
-      </_description>
-    </key>
-    
+
     <key name="expo-applet-hover" type="b">
       <default>false</default>
       <_summary>Expo applet: Activate on hover</_summary>
@@ -397,6 +424,7 @@
     </key>
     
     <key type="i" name="workspace-osd-x">
+      <range min="5" max="95" />
       <default>50</default>
       <_summary>Workspace horizontal position (in percent of the monitor's width)</_summary>
       <_description>
@@ -405,6 +433,7 @@
     </key>
     
     <key type="i" name="workspace-osd-y">
+      <range min="5" max="95" />
       <default>50</default>
       <_summary>Workspace vertical position (in percent of the monitor's height)</_summary>
       <_description>
@@ -473,7 +502,7 @@
     </key>
 
     <key name="alttab-switcher-style" type="s">
-      <default>"icons"</default>
+      <default>"icons+thumbnails"</default>
       <_summary>ALT-tab switcher style</_summary>
       <_description>
        Controls the style of the ALT-tab window switcher. Can be any combination of "icons", "preview" and "thumbnails", separated by "+".
@@ -487,10 +516,39 @@
         When enabled the mouse wheel can scroll through the items in the window list applet.
       </description>
     </key>
+    
+    <key name="bring-windows-to-current-workspace" type="b">
+      <default>false</default>
+      <summary>Brings windows requiring attention to the current workspace</summary>
+      <description>
+        When enabled, if a window requires attention, it is brought to the current workspace.
+      </description>
+    </key>
+
+    <key name="desklets-minimum-decoration" type="i">
+      <default>2</default>
+      <_summary>The minimum decoration level of the desklet</_summary>
+      <_description>The minimum amount of decoration a desklet must have.
+      0 = None;
+      1 = Borders;
+      2 = Borders and header;
+      </_description>
+    </key>
 
     <key type="b" name="enable-edge-flip">
       <default>false</default>
       <_summary>Whether edge flip is enabled</_summary>
+    </key>
+
+    <key type="i" name="edge-flip-delay">
+      <default>1000</default>
+      <summary>Duration of the delay before switching the workspace</summary>
+      <description>Duration of the delay (in milliseconds)</description>
+    </key>
+
+    <key type="b" name="cinnamon-settings-advanced">
+      <default>false</default>
+      <_summary>Whether advanced mode is enabled in cinnamon-settings</_summary>
     </key>
 
     <child name="calendar" schema="org.cinnamon.calendar"/>
@@ -498,6 +556,7 @@
     <child name="recorder" schema="org.cinnamon.recorder"/>
     <child name="keyboard" schema="org.cinnamon.keyboard"/>
     <child name="power" schema="org.cinnamon.power" />
+    <child name="desklets" schema="org.cinnamon.desklets" />
   </schema>
  
   <schema id="org.cinnamon.theme" path="/org/cinnamon/theme/"
@@ -598,6 +657,14 @@
   </schema>
 
   <schema id="org.cinnamon.overrides" path="/org/cinnamon/overrides/">
+    <key name="custom-keybindings-to-3-6" type="b">
+      <default>false</default>
+      <summary>Run-once flag to see if custom keybindings have been converted to gsettings</summary>
+      <description>
+        Run-once flag to see if custom keybindings have been converted to gsettings
+      </description>
+    </key>
+
     <key name="attach-modal-dialogs" type="b">
       <default>false</default>
       <summary>Attach modal dialog to the parent window</summary>
@@ -624,6 +691,14 @@
       </description>
     </key>
 
+    <key type="b" name="workspace-cycle">
+      <default>false</default>
+      <summary>Allow cycling through workspaces</summary>
+      <description>
+        This key overrides the key in org.cinnamon.muffin when running Cinnamon.
+      </description>
+    </key>
+
     <key name="workspaces-only-on-primary" type="b">
       <default>false</default>
       <summary>Workspaces only on primary monitor</summary>
@@ -632,7 +707,7 @@
       </description>
     </key>
   </schema>
-  
+
   <schema id="org.cinnamon.background" path="/org/cinnamon/background/">
     <key name="mode" type="s">
       <default>"wallpaper"</default>
@@ -665,4 +740,53 @@
     </key>
   </schema>
   
+  <schema id="org.cinnamon.screensaver" path="/org/cinnamon/screensaver/">
+    <key name="default-message" type="s">
+      <default>""</default>
+      <summary>Default message for the screensaver</summary>
+      <description>
+        This is the message that appears on the lock screen by default.
+      </description>
+    </key>
+    <key name="ask-for-away-message" type="b">
+      <default>true</default>
+      <summary>Whether to ask for an away message when locking the screen</summary>
+      <description>
+        Whether to ask for an away message when locking the screen.
+      </description>
+    </key>   
+  </schema>
+  
+  <schema id="org.cinnamon.desklets" path="/org/cinnamon/desklets/"
+        gettext-domain="@GETTEXT_PACKAGE@">
+    <child name="clock" schema="org.cinnamon.desklets.clock"/>
+  </schema>
+
+  <schema id="org.cinnamon.desklets.clock" path="/org/cinnamon/desklets/clock/"
+        gettext-domain="@GETTEXT_PACKAGE@">
+    <key name="date-format" type="s">
+      <default>'%H:%M'</default>
+      <_summary>The date format for the clock desklet</_summary>
+      <_description>
+        The format to be used in the clock desklet
+      </_description>
+    </key>
+
+    <key type="i" name="font-size">
+      <default>50</default>
+      <_summary>The font size for the clock deskelt</_summary>
+      <_description> The font size to be used to display the time on the clock desklet</_description>
+    </key>
+  </schema>
+  <schema id="org.cinnamon.desklets.launcher" path="/org/cinnamon/desklets/launcher/"
+        gettext-domain="@GETTEXT_PACKAGE@">
+    <key name="launcher-list" type="as">
+      <default>[]</default>
+      <_summary>Desktop files of the applications to be shown on desktop</_summary>
+      <_description>
+	The "launchers" desklet provides a method to show a launcher on the desktop
+	This list maps the desklet id to the desktop file of application.
+      </_description>
+    </key>
+  </schema>
 </schemalist>

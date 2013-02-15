@@ -102,6 +102,7 @@ enum {
   PROP_SCREEN_HEIGHT,
   PROP_STAGE,
   PROP_STAGE_INPUT_MODE,
+  PROP_BOTTOM_WINDOW_GROUP,
   PROP_WINDOW_GROUP,
   PROP_TOP_WINDOW_GROUP,
   PROP_BACKGROUND_ACTOR,
@@ -189,6 +190,9 @@ cinnamon_global_get_property(GObject         *object,
       break;
     case PROP_STAGE_INPUT_MODE:
       g_value_set_enum (value, global->input_mode);
+      break;
+    case PROP_BOTTOM_WINDOW_GROUP:
+      g_value_set_object (value, meta_get_bottom_window_group_for_screen (global->meta_screen));
       break;
     case PROP_WINDOW_GROUP:
       g_value_set_object (value, meta_get_window_group_for_screen (global->meta_screen));
@@ -401,6 +405,13 @@ cinnamon_global_class_init (CinnamonGlobalClass *klass)
                                                       CINNAMON_TYPE_STAGE_INPUT_MODE,
                                                       CINNAMON_STAGE_INPUT_MODE_NORMAL,
                                                       G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+                                   PROP_BOTTOM_WINDOW_GROUP,
+                                   g_param_spec_object ("bottom-window-group",
+                                                        "Bottom Window Group",
+                                                        "Actor holding window actors that must appear below desklets",
+                                                        CLUTTER_TYPE_ACTOR,
+                                                        G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
                                    PROP_WINDOW_GROUP,
                                    g_param_spec_object ("window-group",
@@ -1550,6 +1561,31 @@ cinnamon_global_get_pointer (CinnamonGlobal         *global,
                         NULL,
                         &raw_mods);
   *mods = raw_mods & GDK_MODIFIER_MASK;
+}
+
+/**
+ * cinnamon_global_set_pointer:
+ * @global: the #CinnamonGlobal
+ * @x: (in): the X coordinate of the pointer, in global coordinates
+ * @y: (in): the Y coordinate of the pointer, in global coordinates
+ *
+ * Sets the pointer coordinates.
+ * This is a wrapper around gdk_device_warp().
+ */
+void
+cinnamon_global_set_pointer (CinnamonGlobal         *global,
+                          int                 x,
+                          int                 y)
+{
+  GdkDeviceManager *gmanager;
+  GdkDevice *gdevice;
+  GdkScreen *gscreen;
+  int x2, y2;
+  
+  gmanager = gdk_display_get_device_manager (global->gdk_display);
+  gdevice = gdk_device_manager_get_client_pointer (gmanager);
+  gdk_device_get_position (gdevice, &gscreen, &x2, &y2);
+  gdk_device_warp (gdevice, gscreen, x, y);
 }
 
 /**

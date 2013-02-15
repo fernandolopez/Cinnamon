@@ -136,6 +136,8 @@ cinnamon_prefs_init (void)
                                          OVERRIDES_SCHEMA);
   meta_prefs_override_preference_schema ("workspaces-only-on-primary",
                                          OVERRIDES_SCHEMA);
+  meta_prefs_override_preference_schema ("workspace-cycle",
+                                         OVERRIDES_SCHEMA);
   meta_prefs_override_preference_schema ("button-layout",
                                          OVERRIDES_SCHEMA);
   meta_prefs_override_preference_schema ("edge-tiling",
@@ -269,7 +271,10 @@ main (int argc, char **argv)
    */
   g_setenv ("GJS_DEBUG_OUTPUT", "stderr", TRUE);
   g_setenv ("GJS_DEBUG_TOPICS", "JS ERROR;JS LOG", TRUE);
-  
+
+  g_setenv ("CINNAMON_VERSION", VERSION, TRUE);
+
+
   center_pointer_on_screen();
 
   cinnamon_dbus_init (meta_get_replace_current_wm ());

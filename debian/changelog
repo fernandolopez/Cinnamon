@@ -1,9 +1,47 @@
-cinnamon (1.6.1lihuen1) UNRELEASED; urgency=low
+cinnamon (1.6.7+nmu1) UNRELEASED; urgency=low
 
-  * Versión adaptada para Lihuen.
-  * Nemo cambiado por Nautilus.
+  * Temporary version to make sure the split into cinnamon and
+    cinnamon-common does not break developers test environment. For
+    cleanliness purpose, remove this version from this changelog file just
+    before the next release.
 
- --  Soporte Lihuen <soportelihuen@linti.unlp.edu.ar>  Mon, 01 Oct 2012 19:05:57 -0300
+ -- Nicolas Bourdaud <nicolas.bourdaud@gmail.com>  Mon, 19 Nov 2012 21:36:11 +0100
+
+cinnamon (1.6.7) nadia; urgency=low
+
+  * 1.6.7
+
+ -- Clement Lefebvre <root@linuxmint.com>  Wed, 14 Nov 2012 14:44:36 +0000
+
+cinnamon (1.6.6) nadia; urgency=low
+
+  * 1.6.6
+
+ -- Clement Lefebvre <root@linuxmint.com>  Tue, 06 Nov 2012 18:08:46 +0000
+
+cinnamon (1.6.5) nadia; urgency=low
+
+  * 1.6.5
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 05 Nov 2012 18:50:04 +0000
+
+cinnamon (1.6.4) nadia; urgency=low
+
+  * 1.6.4
+
+ -- Clement Lefebvre <root@linuxmint.com>  Wed, 24 Oct 2012 16:45:19 +0100
+
+cinnamon (1.6.3) nadia; urgency=low
+
+  * 1.6.3
+
+ -- Clement Lefebvre <root@linuxmint.com>  Sat, 20 Oct 2012 21:24:02 +0100
+
+cinnamon (1.6.2) nadia; urgency=low
+
+  * 1.6.2
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 18 Oct 2012 14:44:40 +0100
 
 cinnamon (1.6.1) maya; urgency=low
 

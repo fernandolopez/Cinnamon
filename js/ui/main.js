@@ -4,17 +4,20 @@ const Clutter = imports.gi.Clutter;
 const DBus = imports.dbus;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Gtk = imports.gi.Gtk;
 const Mainloop = imports.mainloop;
 const Meta = imports.gi.Meta;
 const Cinnamon = imports.gi.Cinnamon;
 const St = imports.gi.St;
+const PointerTracker = imports.misc.pointerTracker;
 
+const AppletManager = imports.ui.appletManager;
 const AutomountManager = imports.ui.automountManager;
 const AutorunManager = imports.ui.autorunManager;
+const DeskletManager = imports.ui.deskletManager;
 const EndSessionDialog = imports.ui.endSessionDialog;
 const PolkitAuthenticationAgent = imports.ui.polkitAuthenticationAgent;
 const ExtensionSystem = imports.ui.extensionSystem;
-const AppletManager = imports.ui.appletManager;
 const Keyboard = imports.ui.keyboard;
 const MessageTray = imports.ui.messageTray;
 const Overview = imports.ui.overview;
@@ -47,11 +50,10 @@ const CIN_LOG_FOLDER = GLib.get_home_dir() + '/.cinnamon/';
 
 let automountManager = null;
 let autorunManager = null;
-let applets = [];
+
 let panel = null;
 let panel2 = null;
 
-let hotCorners = [];
 let placesManager = null;
 let overview = null;
 let expo = null;
@@ -79,6 +81,8 @@ let _defaultCssStylesheet = null;
 let _cssStylesheet = null;
 let dynamicWorkspaces = null;
 let nWorks = null;
+let tracker = null;
+let desktopShown;
 
 let workspace_names = [];
 
@@ -86,6 +90,7 @@ let background = null;
 
 let desktop_layout;
 let applet_side = St.Side.BOTTOM;
+let deskletContainer = null;
 
 let software_rendering = false;
 
@@ -135,7 +140,6 @@ function _initUserSession() {
     global.screen.override_workspace_layout(Meta.ScreenCorner.TOPLEFT, false, 1, -1);
 
     ExtensionSystem.init();
-    ExtensionSystem.loadExtensions();
 
     Meta.keybindings_set_custom_handler('panel-run-dialog', function() {
        getRunDialog().open();
@@ -151,8 +155,10 @@ function start() {
     // Monkey patch utility functions into the global proxy;
     // This is easier and faster than indirecting down into global
     // if we want to call back up into JS.
+    global.logTrace = _logTrace;
+    global.logWarning = _logWarning;
     global.logError = _logError;
-    global.log = _logDebug;
+    global.log = _logInfo;
 
     if (global.settings.get_boolean("enable-looking-glass-logs")) {
         try {
@@ -170,7 +176,7 @@ function start() {
             }
             can_log = true;
         } catch (e) {
-            global.logError(e);
+            global.logError("Error during looking-glass log initialization", e);
         }
     }
 
@@ -201,7 +207,7 @@ function start() {
     // and recalculate application associations, so to avoid
     // races for now we initialize it here.  It's better to
     // be predictable anyways.
-    Cinnamon.WindowTracker.get_default();
+    tracker = Cinnamon.WindowTracker.get_default();
     Cinnamon.AppUsage.get_default();
 
     // The stage is always covered so Clutter doesn't need to clear it; however
@@ -218,10 +224,11 @@ function start() {
         applet_side = St.Side.TOP;        
     }
     
+    Gtk.IconTheme.get_default().append_search_path("/usr/share/cinnamon/icons/");
     _defaultCssStylesheet = global.datadir + '/theme/cinnamon.css';
-    loadTheme();
-    
+
     themeManager = new ThemeManager.ThemeManager();
+    deskletContainer = new DeskletManager.DeskletContainer();
 
     // Set up stage hierarchy to group all UI actors under one container.
     uiGroup = new Cinnamon.GenericContainer({ name: 'uiGroup' });
@@ -232,32 +239,58 @@ function start() {
                             children[i].allocate_preferred_size(flags);
                     });
     St.set_ui_root(global.stage, uiGroup);
-    global.window_group.reparent(uiGroup);
-    global.overlay_group.reparent(uiGroup);
+
+    let parent = global.background_actor.get_parent();
+    if (parent) {
+      parent.remove_child(global.background_actor);
+    }
+    parent = global.bottom_window_group.get_parent();
+    if (parent) {
+      parent.remove_child(global.bottom_window_group);
+    }
+    parent = global.window_group.get_parent();
+    if (parent) {
+      parent.remove_child(global.window_group);
+    }
+    parent = global.overlay_group.get_parent();
+    if (parent) {
+      parent.remove_child(global.overlay_group);
+    }
+
+    uiGroup.add_actor(global.background_actor);
+    uiGroup.add_actor(global.bottom_window_group);
+    uiGroup.add_actor(deskletContainer.actor);
+    uiGroup.add_actor(global.window_group);
+    uiGroup.add_actor(global.overlay_group);
+
     global.stage.add_actor(uiGroup);
     global.top_window_group.reparent(global.stage);
 
     layoutManager = new Layout.LayoutManager();
+    let pointerTracker = new PointerTracker.PointerTracker();
+    pointerTracker.setPosition(layoutManager.primaryMonitor.x + layoutManager.primaryMonitor.width/2,
+        layoutManager.primaryMonitor.y + layoutManager.primaryMonitor.height/2);
+
     xdndHandler = new XdndHandler.XdndHandler();
     // This overview object is just a stub for non-user sessions
-    overview = new Overview.Overview({ isDummy: false });
-    expo = new Expo.Expo({ isDummy: false });
+    overview = new Overview.Overview();
+    expo = new Expo.Expo();
     magnifier = new Magnifier.Magnifier();
     statusIconDispatcher = new StatusIconDispatcher.StatusIconDispatcher();  
                     
-    if (desktop_layout == LAYOUT_TRADITIONAL) {                                    
-        panel = new Panel.Panel(true);           
+    if (desktop_layout == LAYOUT_TRADITIONAL) {
+        panel = new Panel.Panel(true, true);
         panel.actor.add_style_class_name('panel-bottom');
         layoutManager.panelBox.add(panel.actor);
     }
     else if (desktop_layout == LAYOUT_FLIPPED) {
-        panel = new Panel.Panel(false);                 
+        panel = new Panel.Panel(false, true);
         panel.actor.add_style_class_name('panel-top');
-        layoutManager.panelBox.add(panel.actor);  
+        layoutManager.panelBox.add(panel.actor);
     }
     else if (desktop_layout == LAYOUT_CLASSIC) {
-        panel = new Panel.Panel(false);         
-        panel2 = new Panel.Panel(true);         
+        panel = new Panel.Panel(false, true);
+        panel2 = new Panel.Panel(true, false);
         panel.actor.add_style_class_name('panel-top');
         panel2.actor.add_style_class_name('panel-bottom');
         layoutManager.panelBox.add(panel.actor);   
@@ -304,7 +337,7 @@ function start() {
 
     global.stage.connect('captured-event', _globalKeyPressHandler);
 
-    _log('info', 'loaded at ' + _startDate);
+    global.log('loaded at ' + _startDate);
     log('Cinnamon started at ' + _startDate);
 
     let perfModuleName = GLib.getenv("CINNAMON_PERF_MODULE");
@@ -322,10 +355,12 @@ function start() {
     global.screen.connect('window-left-monitor', _windowLeftMonitor);
     global.screen.connect('restacked', _windowsRestacked);
 
+    global.window_manager.connect('map', _onWindowMapped);
+
     _nWorkspacesChanged();
     
     AppletManager.init();
-    applets = AppletManager.loadApplets();
+    DeskletManager.init();
 }
 
 function enablePanels() {
@@ -391,6 +426,10 @@ function getWorkspaceName(index) {
         _makeDefaultWorkspaceName(index);
 }
 
+function hasDefaultWorkspaceName(index) {
+    return getWorkspaceName(index) == _makeDefaultWorkspaceName(index);
+}
+
 function _addWorkspace() {
     if (dynamicWorkspaces)
         return false;
@@ -413,6 +452,20 @@ function _removeWorkspace(workspace) {
     global.settings.set_int("number-workspaces", nWorks);
     global.screen.remove_workspace(workspace, global.get_current_time());
     return true;
+}
+
+function moveWindowToNewWorkspace(metaWindow, switchToNewWorkspace) {
+    if (switchToNewWorkspace) {
+        let targetCount = global.screen.n_workspaces + 1;
+        let nnwId = global.screen.connect('notify::n-workspaces', function() {
+            global.screen.disconnect(nnwId);
+            if (global.screen.n_workspaces === targetCount) {
+                let newWs = global.screen.get_workspace_by_index(global.screen.n_workspaces - 1);
+                newWs.activate(global.get_current_time());
+            }
+        });
+    }
+    metaWindow.change_workspace_by_index(global.screen.n_workspaces, true, global.get_current_time());
 }
 
 function _staticWorkspaces() {
@@ -527,6 +580,10 @@ function _windowsRestacked() {
     global.sync_pointer();
 }
 
+function _onWindowMapped() {
+    desktopShown = false;
+}
+
 function _queueCheckWorkspaces() {
     if (!dynamicWorkspaces)
         return false;
@@ -536,8 +593,10 @@ function _queueCheckWorkspaces() {
 }
 
 function _nWorkspacesChanged() {
+    nWorks = global.screen.n_workspaces;
     if (!dynamicWorkspaces)
         return false;
+
     let oldNumWorkspaces = _workspaces.length;
     let newNumWorkspaces = global.screen.n_workspaces;
 
@@ -680,24 +739,70 @@ function _log(category, msg) {
                          category: category,
                          message: text };
     _errorLogStack.push(out);
+    if(cinnamonDBusService)
+        cinnamonDBusService.notifyLgLogUpdate();
     if (can_log) lg_log_file.write(renderLogLine(out), null);
 }
 
-function _logError(msg) {
-    return _log('error', msg);
+function isError(obj) {
+    return typeof(obj) == 'object' && 'message' in obj && 'stack' in obj;
 }
 
-function _logDebug(msg) {
-    return _log('debug', msg);
+function _LogTraceFormatted(stack) {
+    _log('trace', '\n<----------------\n' + stack + '---------------->');
 }
 
-// Used by the error display in lookingGlass.js
-function _getAndClearErrorStack() {
-    let errors = _errorLogStack;
-    _errorLogStack = [];
-    return errors;
+// If msg is an Error, its stack-trace will be printed, otherwise a stack-trace will be generated from this call
+// If you want to print the message of an Error as well, use the other log functions instead.
+function _logTrace(msg) {
+    if(isError(msg)) {
+        _LogTraceFormatted(msg.stack);
+    } else {
+        try {
+            throw new Error();
+        } catch (e) {
+            // e.stack must have at least two lines, with the first being
+            // _logTrace() (which we strip off), and the second being
+            // our caller.
+            let trace = e.stack.substr(e.stack.indexOf('\n') + 1);
+            _LogTraceFormatted(stack);
+        }
+    }
 }
 
+// If msg is an Error, its message will be printed as 'warning' and its stack-trace will be printed as 'trace'
+function _logWarning(msg) {
+    if(isError(msg)) {
+        _log('warning', msg.message);
+        _LogTraceFormatted(msg.stack);
+    } else {
+        _log('warning', msg);
+    }
+}
+
+// If msg is an Error, its message will be printed as 'error' and its stack-trace will be printed as 'trace'
+function _logError(msg, error) {
+    if(error && isError(error)) {
+        _log('error', error.message);
+        _LogTraceFormatted(error.stack);
+        _log('error', msg);
+    } else if(isError(msg)) {
+        _log('error', msg.message);
+        _LogTraceFormatted(msg.stack);
+    } else {
+        _log('error', msg);
+    }
+}
+
+// If msg is an Error, its message will be printed as 'info' and its stack-trace will be printed as 'trace'
+function _logInfo(msg) {
+    if(isError(msg)) {
+        _log('info', msg.message);
+        _LogTraceFormatted(msg.stack);
+    } else {
+        _log('info', msg);
+    }
+}
 
 function formatTime(d) {
     function pad(n) { return n < 10 ? '0' + n : n; }
@@ -726,8 +831,11 @@ function logStackTrace(msg) {
 }
 
 function isWindowActorDisplayedOnWorkspace(win, workspaceIndex) {
-    return win.get_workspace() == workspaceIndex ||
-        (win.get_meta_window() && win.get_meta_window().is_on_all_workspaces());
+    if (win.get_workspace() == workspaceIndex) {return true;}
+    let mwin = win.get_meta_window();
+    return mwin && (mwin.is_on_all_workspaces() ||
+        (wm.workspacesOnlyOnPrimary && mwin.get_monitor() != layoutManager.primaryIndex)
+    );
 }
 
 function getWindowActorsForWorkspace(workspaceIndex) {
@@ -955,6 +1063,11 @@ function activateWindow(window, time, workspaceNum) {
         workspace.activate_with_focus(window, time);
     } else {
         window.activate(time);
+        Mainloop.idle_add(function() {
+            window.foreach_transient(function(win) {
+                win.activate(time);
+            });
+        });
     }
 
     overview.hide();
@@ -1061,7 +1174,7 @@ function initializeDeferredWork(actor, callback, props) {
 function queueDeferredWork(workId) {
     let data = _deferredWorkData[workId];
     if (!data) {
-        global.logError('invalid work id ', workId);
+        global.logError('invalid work id: ' +  workId);
         return;
     }
     if (_deferredWorkQueue.indexOf(workId) < 0)
@@ -1078,6 +1191,21 @@ function queueDeferredWork(workId) {
     }
 }
 
+function isInteresting(metaWindow) {
+    if (tracker.is_window_interesting(metaWindow)) {
+        // The nominal case.
+        return true;
+    }
+    // The rest of this function is devoted to discovering "orphan" windows
+    // (dialogs without an associated app, e.g., the Logout dialog).
+    if (tracker.get_window_app(metaWindow)) {
+        // orphans don't have an app!
+        return false;
+    }    
+    let type = metaWindow.get_window_type();
+    return type === Meta.WindowType.DIALOG || type === Meta.WindowType.MODAL_DIALOG;
+}
+
 /**
  * getTabList:
  * @workspaceOpt (optional) workspace, defaults to global.screen.get_active_workspace()
@@ -1091,40 +1219,35 @@ function getTabList(workspaceOpt, screenOpt) {
     let screen = screenOpt || global.screen;
     let display = screen.get_display();
     let workspace = workspaceOpt || screen.get_active_workspace();
-    
+
     let windows = []; // the array to return
 
-    // Run a pass through the NORMAL tablist. We only record the identity 
-    // of each window at this point.
-    let normalLookup = {};
-    let normalWindows = display.get_tab_list(Meta.TabList.NORMAL, screen,
-                                       workspace);
-    for (let i = 0; i < normalWindows.length; ++i) {
-        let window = normalWindows[i];
-        normalLookup[window.get_stable_sequence()] = 1;
-    }
-
-    // Run a pass through the NORMAL_ALL tablist.
-    // The purpose is to find "orphan" windows that would otherwise be
-    // difficult to navigate to when lost behind other windows.
-    // The purpose of adding all windows in the same loop is to preserve
-    // the correct tab order.
     let allwindows = display.get_tab_list(Meta.TabList.NORMAL_ALL, screen,
                                        workspace);
     let registry = {}; // to avoid duplicates
-    let tracker = Cinnamon.WindowTracker.get_default();
+
     for (let i = 0; i < allwindows.length; ++i) {
         let window = allwindows[i];
-        let seqno = window.get_stable_sequence();
-        // Add "normal" windows and those that don't have an "app".
-        if (normalLookup[seqno] === 1 || !tracker.get_window_app(window))
-        {
+        if (isInteresting(window)) {
+            let seqno = window.get_stable_sequence();
             if (!registry[seqno]) {
                 windows.push(window);
-                registry[seqno] = true;
+                registry[seqno] = true; // there may be duplicates in the list (rare)
             }
         }
     }
     return windows;
 }
 
+/**
+ * toggleDesktop:
+ *
+ * Shows or unshows desktop
+ */
+function toggleDesktop() {
+    if (desktopShown)
+        global.screen.unshow_desktop();
+    else
+        global.screen.show_desktop(global.get_current_time());
+    desktopShown = !desktopShown;
+}

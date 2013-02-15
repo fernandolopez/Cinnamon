@@ -4,9 +4,9 @@ const DBus = imports.dbus;
 const Lang = imports.lang;
 
 const Config = imports.misc.config;
-const ExtensionSystem = imports.ui.extensionSystem;
 const Flashspot = imports.ui.flashspot;
 const Main = imports.ui.main;
+const Extension = imports.ui.extension;
 
 const CinnamonIface = {
     name: 'org.Cinnamon',
@@ -14,17 +14,49 @@ const CinnamonIface = {
                 inSignature: 's',
                 outSignature: 'bs'
               },
-              { name: 'ListExtensions',
+              { name: 'lgEval',
+                inSignature: 's',
+                outSignature: ''
+              },
+              { name: 'lgGetResults',
                 inSignature: '',
-                outSignature: 'a{sa{sv}}'
+                outSignature: 'bs'
               },
-              { name: 'GetExtensionInfo',
+              { name: 'lgAddResult',
                 inSignature: 's',
-                outSignature: 'a{sv}'
+                outSignature: ''
               },
-              { name: 'GetExtensionErrors',
+              { name: 'lgGetErrorStack',
+                inSignature: '',
+                outSignature: 'bs'
+              },
+              { name: 'lgGetMemoryInfo',
+                inSignature: '',
+                outSignature: 'bs'
+              },
+              { name: 'lgFullGc',
+                inSignature: '',
+                outSignature: ''
+              },
+              { name: 'lgInspect',
                 inSignature: 's',
-                outSignature: 'as'
+                outSignature: 'bs'
+              },
+              { name: 'lgGetLatestWindowList',
+                inSignature: '',
+                outSignature: 'bs'
+              },
+              { name: 'lgStartInspector',
+                inSignature: '',
+                outSignature: ''
+              },
+              { name: 'lgGetExtensionList',
+                inSignature: '',
+                outSignature: 'bs'
+              },
+              { name: 'lgReloadExtension',
+                inSignature: 's',
+                outSignature: ''
               },
               { name: 'ScreenshotArea',
                 inSignature: 'biiiibs',
@@ -42,36 +74,52 @@ const CinnamonIface = {
                 name: 'FlashArea',
                 inSignature: 'iiii',
                 outSignature: ''
-              },
-              { name: 'EnableExtension',
-                inSignature: 's',
-                outSignature: ''
-              },
-              { name: 'DisableExtension',
-                inSignature: 's',
-                outSignature: ''
-              },
-              { name: 'InstallRemoteExtension',
-                inSignature: 'ss',
-                outSignature: ''
-              },
-              { name: 'UninstallExtension',
-                inSignature: 's',
-                outSignature: 'b'
               }
              ],
-    signals: [{ name: 'ExtensionStatusChanged',
-                inSignature: 'sis' }],
+    signals: [{
+                name: 'lgLogUpdate',
+                inSignature: ''
+              },
+              {
+                name: 'lgWindowListUpdate',
+                inSignature: ''
+              },
+              {
+                name: 'lgResultUpdate',
+                inSignature: ''
+              },
+              {
+                name: 'lgInspectorDone',
+                inSignature: ''
+              },
+              {
+                name: 'lgExtensionListUpdate',
+                inSignature: ''
+              }
+             ],
     properties: [{ name: 'OverviewActive',
                    signature: 'b',
                    access: 'readwrite' },
-                 { name: 'ApiVersion',
-                   signature: 'i',
-                   access: 'read' },
                  { name: 'CinnamonVersion',
                    signature: 's',
                    access: 'read' }]
 };
+
+function getJsonReturnBS(object) {
+    let returnValue;
+    let success;
+    try {
+        returnValue = JSON.stringify(object);
+        // A hack; DBus doesn't have null/undefined
+        if (returnValue == undefined)
+            returnValue = '';
+        success = true;
+    } catch (e) {
+        returnValue = JSON.stringify(e);
+        success = false;
+    }
+    return [success, returnValue];
+}
 
 function Cinnamon() {
     this._init();
@@ -80,8 +128,6 @@ function Cinnamon() {
 Cinnamon.prototype = {
     _init: function() {
         DBus.session.exportObject('/org/Cinnamon', this);
-        ExtensionSystem.connect('extension-state-changed',
-                                Lang.bind(this, this._extensionStateChanged));
     },
 
     /**
@@ -112,6 +158,125 @@ Cinnamon.prototype = {
             success = false;
         }
         return [success, returnValue];
+    },
+    
+    lgEval: function(code) {
+        Main.createLookingGlass()._evaluate(code);
+    },
+    
+    lgGetResults: function() {
+        return getJsonReturnBS(Main.createLookingGlass().rawResults);
+    },
+    
+    lgAddResult: function(path) {
+        Main.createLookingGlass().addResult(path);
+    },
+    
+    lgGetErrorStack: function() {
+        return getJsonReturnBS(Main._errorLogStack);
+    },
+    
+    lgGetMemoryInfo: function() {
+        // can't use it raw, need to store it again
+        let memInfo = global.get_memory_info();
+        let memdata = {
+            'glibc_uordblks': (memInfo.glibc_uordblks),
+            'js_bytes': (memInfo.js_bytes),
+            'gjs_boxed': (memInfo.gjs_boxed),
+            'gjs_gobject': (memInfo.gjs_gobject),
+            'gjs_function': (memInfo.gjs_function),
+            'gjs_closure': (memInfo.gjs_closure),
+            'last_gc_seconds_ago': (memInfo.last_gc_seconds_ago)
+        };
+        return getJsonReturnBS(memdata);
+    },
+    
+    lgFullGc: function() {
+        global.gc();
+    },
+    
+    lgInspect: function(path) {
+        try {
+            let result = Main.createLookingGlass().inspect(path);
+            return getJsonReturnBS(result);
+        } catch (e) {
+            global.logError('Error inspecting path: ' + path, e);
+            return [false, ''];
+        }
+    },
+    
+    lgGetLatestWindowList: function() {
+        try {
+            let windowList = Main.createLookingGlass().getLatestWindowList();
+            return getJsonReturnBS(windowList);
+        } catch (e) {
+            global.logError('Error getting latest window list', e);
+            return [false, ''];
+        }
+    },
+    
+    lgStartInspector: function() {
+        try {
+            Main.createLookingGlass().startInspector(true);
+        } catch (e) {
+            global.logError('Error starting inspector', e);
+        }
+    },
+    
+    lgGetExtensionList: function() {
+        try {
+            let extensionList = [];
+            for (let uuid in Extension.meta) {
+                let meta = Extension.meta[uuid];
+                // There can be cases where we create dummy extension metadata
+                // that's not really a proper extension. Don't bother with these.
+                if (meta.name) {
+                    extensionList.push({
+                        status: Extension.getMetaStateString(meta.state),
+                        name: meta.name,
+                        description: meta.description,
+                        uuid: uuid,
+                        folder: meta.path,
+                        url: meta.url ? meta.url : '',
+                        type: Extension.objects[uuid].type.name
+                    });
+                }
+            }
+        
+            return getJsonReturnBS(extensionList);
+        } catch (e) {
+            global.logError('Error getting the extension list', e);
+            return [false, ''];
+        }
+    },
+    
+    lgReloadExtension: function(uuid) {
+        let extension = Extension.objects[uuid];
+        if (extension) {
+            let type = extension.type;
+            Extension.unloadExtension(uuid);
+            Extension.loadExtension(uuid, type);
+        }
+    },
+    
+    notifyLgLogUpdate: function() {
+        DBus.session.emit_signal('/org/Cinnamon', 'org.Cinnamon', 'lgLogUpdate', '', []);
+    },
+    
+    notifyLgWindowListUpdate: function() {
+        DBus.session.emit_signal('/org/Cinnamon', 'org.Cinnamon', 'lgWindowListUpdate', '', []);
+    },
+    
+    notifyLgResultUpdate: function() {
+        DBus.session.emit_signal('/org/Cinnamon', 'org.Cinnamon', 'lgResultUpdate', '', []);
+    },
+    
+    notifyLgInspectorDone: function() {
+        DBus.session.emit_signal('/org/Cinnamon', 'org.Cinnamon', 'lgInspectorDone', '', []);
+    },
+    
+    notifyLgExtensionListUpdate: function() {
+        DBus.session.emit_signal('/org/Cinnamon', 'org.Cinnamon', 'lgExtensionListUpdate', '', []);
     },
 
     _onScreenshotComplete: function(obj, result, area, flash, invocation) {
@@ -191,40 +356,6 @@ Cinnamon.prototype = {
         flashspot.fire();
     },
 
-    ListExtensions: function() {
-        return ExtensionSystem.extensionMeta;
-    },
-
-    GetExtensionInfo: function(uuid) {
-        return ExtensionSystem.extensionMeta[uuid] || {};
-    },
-
-    GetExtensionErrors: function(uuid) {
-        return ExtensionSystem.errors[uuid] || [];
-    },
-
-    EnableExtension: function(uuid) {
-        let enabledExtensions = global.settings.get_strv(ExtensionSystem.ENABLED_EXTENSIONS_KEY);
-        if (enabledExtensions.indexOf(uuid) == -1)
-            enabledExtensions.push(uuid);
-        global.settings.set_strv(ExtensionSystem.ENABLED_EXTENSIONS_KEY, enabledExtensions);
-    },
-
-    DisableExtension: function(uuid) {
-        let enabledExtensions = global.settings.get_strv(ExtensionSystem.ENABLED_EXTENSIONS_KEY);
-        while (enabledExtensions.indexOf(uuid) != -1)
-            enabledExtensions.splice(enabledExtensions.indexOf(uuid), 1);
-        global.settings.set_strv(ExtensionSystem.ENABLED_EXTENSIONS_KEY, enabledExtensions);
-    },
-
-    InstallRemoteExtension: function(uuid, version_tag) {
-        ExtensionSystem.installExtensionFromUUID(uuid, version_tag);
-    },
-
-    UninstallExtension: function(uuid) {
-        return ExtensionSystem.uninstallExtensionFromUUID(uuid);
-    },
-
     get OverviewActive() {
         return Main.overview.visible;
     },
@@ -236,16 +367,7 @@ Cinnamon.prototype = {
             Main.overview.hide();
     },
 
-    ApiVersion: ExtensionSystem.API_VERSION,
-
-    CinnamonVersion: Config.PACKAGE_VERSION,
-
-    _extensionStateChanged: function(_, newState) {
-        DBus.session.emit_signal('/org/Cinnamon',
-                                 'org.Cinnamon',
-                                 'ExtensionStatusChanged', 'sis',
-                                 [newState.uuid, newState.state, newState.error]);
-    }
+    CinnamonVersion: Config.PACKAGE_VERSION
 };
 
 DBus.conformExport(Cinnamon.prototype, CinnamonIface);
